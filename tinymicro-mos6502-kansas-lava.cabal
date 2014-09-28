@@ -1,0 +1,42 @@
+name:                tinymicro-mos6502-kansas-lava
+version:             0.0.0.0
+synopsis:            TinyMicro implementation in Kansas Lava, built around the MOS 6502
+-- description:
+license:             GPL-2
+license-file:        LICENSE
+copyright:           (C) 2014 Gergo Erdi
+author:              Gergo Erdi
+maintainer:          Gergo Erdi <gergo@erdi.hu>
+category:            Hardware
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+executable tinymicro-mos6502-kansas-lava
+  hs-source-dirs:      src
+  main-is:             MOS6502/TinyMicro/Build.hs
+  other-modules:
+        MOS6502.TinyMicro.Video
+        
+  build-depends:
+        base >=4.7 && < 5,
+        kansas-lava >=0.2.4 && < 0.2.5,
+        netlist >=0.3 && <0.4,
+        netlist-to-vhdl >=0.3 && <0.4,
+        kansas-lava-papilio == 0.1.0,
+        kansas-lava-shake >= 0.1 && < 0.2,
+        shake,
+        sized-types >=0.3,
+        mos6502-kansas-lava == 0.0.0.0,
+        bytestring,
+        directory
+  default-language:    Haskell2010
+  other-extensions:    ScopedTypeVariables, RecordWildCards, FlexibleInstances, TypeFamilies, NoMonomorphismRestriction
+  Ghc-Options:         
+                       -fwarn-unused-imports -fwarn-unused-matches
+                       -fwarn-unused-binds -fwarn-missing-signatures
+                       -threaded
+
+source-repository head
+  type:     git
+  location: git://github.com/gergoerdi/tinymicro-mos6502-kansas-lava
