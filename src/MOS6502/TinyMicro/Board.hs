@@ -76,7 +76,7 @@ boardCircuit romContents = vram
 
     romR = rom (unsigned cpuMemA) (Just . romContents)
 
-    isVideo = 0x0200 .<=. cpuMemA .&&. cpuMemA .<. 0x0400
+    isVideo = 0x0200 .<=. cpuMemA .&&. cpuMemA .<. 0x0600
     isRAM = cpuMemA .<. 0x4000
     isROM = delay $ 0xF000 .<=. cpuMemA
 
