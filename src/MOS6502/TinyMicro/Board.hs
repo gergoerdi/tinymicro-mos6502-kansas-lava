@@ -65,7 +65,12 @@ boardCircuit romContents = vram
     mpipe = packEnabled (isEnabled cpuMemW .&. isRAM) $
             pack (unsigned cpuMemA, enabledVal cpuMemW)
     ram = writeMemory mpipe
-    cpuWait = low
+
+    -- Slow down CPU 512-fold
+    cpuWait = runRTL $ do
+        counter <- newReg (0 :: U9)
+        counter := reg counter + 1
+        return $ reg counter ./=. 0
 
     ramR = syncRead ram (unsigned cpuMemA)
 
