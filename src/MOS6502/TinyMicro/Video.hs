@@ -53,9 +53,17 @@ drive32x32 palette VGADriverIn{..} =
 
     newPixel = bitNot vgaOutClkPhase .&&. inField .&&. ((x - 192) .&. 0x7 .==. 0)
 
-    rgb = mux inField (pureS (maxBound, minBound, minBound),
+    rgb = mux inField (pureS (2, 2, 2),
                        funMap (Just . palette) vgaInR)
-    (r, g, b) = unpack rgb
+    (r, g, b') = unpack rgb
+    b = funMap (Just . fixBlue) b'
+
+fixBlue :: U4 -> U4
+fixBlue b = sorted !! fromIntegral b
+  where
+    sorted = [ 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x8, 0x6
+             , 0xa, 0x7, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf
+             ]
 
 betweenCO :: (Ord a, Rep a) => Signal clk a -> (a, a) -> Signal clk Bool
 x `betweenCO` (lo, hi) = pureS lo .<=. x .&&. x .<. pureS hi
