@@ -32,7 +32,7 @@ executable tinymicro-mos6502-kansas-lava
         directory
   default-language:    Haskell2010
   other-extensions:    ScopedTypeVariables, RecordWildCards, FlexibleInstances, TypeFamilies, NoMonomorphismRestriction
-  Ghc-Options:         
+  Ghc-Options:         -Werror
                        -fwarn-unused-imports -fwarn-unused-matches
                        -fwarn-unused-binds -fwarn-missing-signatures
                        -threaded

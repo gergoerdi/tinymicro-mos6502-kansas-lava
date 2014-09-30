@@ -1,25 +1,19 @@
 {-# LANGUAGE RecordWildCards #-}
-module MOS6502.TinyMicro.Board where
+module MOS6502.TinyMicro.Board (board) where
 
 import MOS6502.Types
 import MOS6502.CPU
 import MOS6502.TinyMicro.Video
 
 import Language.KansasLava
-import Language.KansasLava.Signal (shallowMapS)
 import Hardware.KansasLava.Boards.Papilio.Arcade
 import Hardware.KansasLava.VGA.Driver
 import Hardware.KansasLava.VGA
 
 import Data.Sized.Unsigned
-import Data.Sized.Matrix (Matrix, Size)
-import qualified Data.Sized.Matrix as Matrix
 
 import Data.Bits
-import Data.List (transpose)
-import Data.Maybe (fromMaybe)
 import qualified Data.ByteString as BS
-import Control.Applicative
 
 -- Memory layout:
 --
@@ -39,9 +33,6 @@ programToROM startingAddr bs addr
   | otherwise = fromIntegral $ BS.index bs offset
   where
     offset = fromIntegral $ addr - fromIntegral startingAddr
-
-program :: IO BS.ByteString
-program = BS.readFile "example/FullscreenLogo.obj"
 
 board :: BS.ByteString -> Fabric ()
 board prog = do
