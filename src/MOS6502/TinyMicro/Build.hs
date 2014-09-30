@@ -73,8 +73,12 @@ main = do
 
 lavaRules :: FilePath -> String -> String -> Rules ()
 lavaRules modName vhdl ucf = do
-    gensrc modName <.> "vhdl" *> \target -> writeFileChanged target vhdl
-    gensrc modName <.> "ucf" *> \target -> writeFileChanged target ucf
+    gensrc modName <.> "vhdl" *> \target -> do
+        alwaysRerun
+        writeFileChanged target vhdl
+    gensrc modName <.> "ucf" *> \target -> do
+        alwaysRerun
+        writeFileChanged target ucf
     gensrc "lava-prelude.vhdl" *> liftIO . writeVhdlPrelude
   where
     gensrc f = "gensrc" </> f
