@@ -1,13 +1,15 @@
 {-# LANGUAGE RecordWildCards #-}
-module MOS6502.TinyMicro.DCM (dcm50MHz) where
+module MOS6502.TinyMicro.DCM
+       ( dcm50MHz
+       , dcm80MHz
+       ) where
 
 import Language.Netlist.AST
 
 -- TODO: Move this to some library... kansas-lava-papilio, maybe?
 
--- | Use 50MHz DCM to replace clock signal
-dcm50MHz :: Ident -> Module -> Module
-dcm50MHz newClock Module{..} = Module name inputs outputs [] decls
+dcm :: Ident -> Ident -> Module -> Module
+dcm dcmName newClock Module{..} = Module name inputs outputs [] decls
   where
     name = module_name
     inputs = (rawClock, Nothing) : filter ((/= newClock) . fst) module_inputs
@@ -18,7 +20,7 @@ dcm50MHz newClock Module{..} = Module name inputs outputs [] decls
 
     routing = NetDecl newClock Nothing Nothing
 
-    dcmInst = InstDecl "work.dcm_32_to_50p35" "inst_dcm_32_to_50p35" []
+    dcmInst = InstDecl ("work." ++ dcmName) ("inst_" ++ dcmName) []
               [ ("clkin_in",        ExprVar rawClock)
               , ("clkin_ibufg_out", open)
               ]
@@ -27,3 +29,11 @@ dcm50MHz newClock Module{..} = Module name inputs outputs [] decls
               ]
 
     open = ExprVar "open"
+
+-- | Use 50MHz DCM to replace clock signal
+dcm50MHz :: Ident -> Module -> Module
+dcm50MHz = dcm "dcm_32_to_50p35"
+
+-- | Use 80MHz DCM to replace clock signal
+dcm80MHz :: Ident -> Module -> Module
+dcm80MHz = dcm "dcm_32_to_80"

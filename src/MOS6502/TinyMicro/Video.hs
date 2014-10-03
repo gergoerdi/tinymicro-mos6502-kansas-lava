@@ -39,19 +39,30 @@ drive32x32 palette VGADriverIn{..} =
                  , vgaOutY = y'
                  , ..})
   where
-    VGADriverOut{..} = driveVGA vga640x480at60 (VGADriverIn r g b)
+    VGADriverOut{..} = driveVGA vga800x600at60 (VGADriverIn r g b)
 
     (validX, x) = unpackEnabled vgaOutX
     (validY, y) = unpackEnabled vgaOutY
 
-    inFieldH = validX .&&. x `betweenCO` (192, 448)
-    inFieldV = validY .&&. y `betweenCO` (112, 368)
+    wReal = 800
+    hReal = 600
+    wVirt = 32 * 16
+    hVirt = 32 * 16
+    xStart = (wReal - wVirt) `div` 2
+    yStart = (hReal - hVirt) `div` 2
+    xEnd = wReal - xStart
+    yEnd = hReal - yStart
+
+    inFieldH = validX .&&. x `betweenCO` (xStart, xEnd)
+    inFieldV = validY .&&. y `betweenCO` (yStart, yEnd)
     inField = inFieldH .&&. inFieldV
 
-    x' = mapEnabled (\x -> signed $ (x - 192) `shiftR` 3) vgaOutX
-    y' = mapEnabled (\y -> signed $ (y - 112) `shiftR` 3) vgaOutY
 
-    newPixel = bitNot vgaOutClkPhase .&&. inField .&&. ((x - 192) .&. 0x7 .==. 0)
+
+    x' = mapEnabled (\x -> signed $ (x - pureS xStart) `shiftR` 4) vgaOutX
+    y' = mapEnabled (\y -> signed $ (y - pureS yStart) `shiftR` 4) vgaOutY
+
+    newPixel = bitNot vgaOutClkPhase .&&. inField .&&. ((x - pureS xStart) .&. 0xf .==. 0)
 
     rgb = mux inField (pureS (2, 2, 2),
                        funMap (Just . palette) vgaInR)
@@ -120,11 +131,11 @@ synthesize model modName bench = do
         bench
 
     mod <- netlistCircuit modName kleg
-    let mod' = dcm50MHz clock mod
+    let mod' = dcm80MHz clock mod
         vhdl = genVHDL mod' ["work.lava.all", "work.all"]
 
     ucf <- toUCF model kleg
 
     return (vhdl, ucf)
   where
-    clock = "CLK_50MHZ"
+    clock = "CLK_80MHZ"

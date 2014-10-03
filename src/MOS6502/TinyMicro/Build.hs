@@ -69,4 +69,4 @@ main = do
             ]
 
     modName = "TinyMicro6502"
-    xaws = ["dcm_32_to_50p35"]
+    xaws = ["dcm_32_to_80"]
