@@ -14,8 +14,8 @@ import qualified Data.ByteString as BS
 import Data.Char (toLower)
 
 import Hardware.KansasLava.Boards.Papilio.Arcade (Model(..))
-import MOS6502.TinyMicro.Video (synthesize)
-import qualified MOS6502.TinyMicro.Board as Board
+import TinyMicro.Video (synthesize)
+import qualified TinyMicro.Board as Board
 
 data Flag = ImageFile FilePath
           | XilinxRoot FilePath

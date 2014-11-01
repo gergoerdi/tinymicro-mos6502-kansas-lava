@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module MOS6502.TinyMicro.DCM
+module TinyMicro.DCM
        ( dcm50MHz
        , dcm80MHz
        ) where

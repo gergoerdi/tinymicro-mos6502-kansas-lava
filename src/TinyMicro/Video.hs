@@ -1,9 +1,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleInstances #-}
-module MOS6502.TinyMicro.Video where
+module TinyMicro.Video where
 
-import MOS6502.TinyMicro.DCM
+import TinyMicro.DCM
 
 import Language.KansasLava
 import Language.KansasLava.VHDL

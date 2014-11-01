@@ -1,9 +1,9 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module MOS6502.TinyMicro.Board (board) where
+module TinyMicro.Board (board) where
 
 import MOS6502.CPU
-import MOS6502.TinyMicro.Video
+import TinyMicro.Video
 
 import Language.KansasLava
 import Hardware.KansasLava.Boards.Papilio.Arcade

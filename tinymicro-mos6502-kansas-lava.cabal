@@ -14,9 +14,11 @@ cabal-version:       >=1.10
 
 executable tinymicro-mos6502-kansas-lava
   hs-source-dirs:      src
-  main-is:             MOS6502/TinyMicro/Build.hs
+  main-is:             TinyMicro/Build.hs
   other-modules:
-        MOS6502.TinyMicro.Video
+        TinyMicro.DCM
+        TinyMicro.Board
+        TinyMicro.Video
         
   build-depends:
         base >=4.7 && < 5,
