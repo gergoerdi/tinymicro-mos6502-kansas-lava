@@ -57,6 +57,11 @@ drive32x32 palette VGADriverIn{..} =
     inFieldV = validY .&&. y `betweenCO` (yStart, yEnd)
     inField = inFieldH .&&. inFieldV
 
+    -- (x', y') = runRTL $ do
+    --     WHEN vgaOutClkPhase $ do
+
+    -- x' = runRTL $ do
+    --     cnt <- newReg 0
 
 
     x' = mapEnabled (\x -> signed $ (x - pureS xStart) `shiftR` 4) vgaOutX
