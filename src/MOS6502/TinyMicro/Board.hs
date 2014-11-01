@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module MOS6502.TinyMicro.Board (board) where
 
-import MOS6502.Types
 import MOS6502.CPU
 import MOS6502.TinyMicro.Video
 
@@ -21,6 +21,8 @@ import qualified Data.ByteString as BS
 -- 0x0200 - 0x03FF: 1K VRAM (on top of RAM)
 -- 0xE000 - 0xFFFF: 8K ROM
 
+type Byte = U8
+type Addr = U16
 type RAMAddr = U14
 type ROMAddr = U13
 
@@ -34,46 +36,67 @@ programToROM startingAddr bs addr
   where
     offset = fromIntegral $ addr - fromIntegral startingAddr
 
+data CPUSocketIn clk = CPUSocketIn
+    { csMemR :: Signal clk Byte
+    }
+
+data CPUSocketOut clk = CPUSocketOut
+    { csMemA :: Signal clk Addr
+    , csMemW :: Signal clk (Enabled Byte)
+    }
+
 board :: BS.ByteString -> Fabric ()
 board prog = do
     vga . encodeVGA $ vgaOut
   where
-    vram = boardCircuit (programToROM 0xF000 prog)
+    vram = boardCircuit (fromCPU . fst . cpu . toCPU) (programToROM 0xF000 prog)
+
+    toCPU :: (Clock clk) => CPUSocketIn clk -> CPUIn clk
+    toCPU CPUSocketIn{..} = CPUIn{..}
+      where
+        cpuMemR = csMemR
+        cpuNMI = high
+        cpuIRQ = high
+
+        -- Slow down CPU 1024-fold
+        cpuWait = runRTL $ do
+            counter <- newReg (0 :: U10)
+            counter := reg counter + 1
+            return $ reg counter ./=. 0
+
+    fromCPU :: (Clock clk) => CPUOut clk -> CPUSocketOut clk
+    fromCPU CPUOut{..} = CPUSocketOut{..}
+      where
+        csMemA = cpuMemA
+        csMemW = cpuMemW
 
     (vgaPos, VGADriverOut{..}) = vgaFB palette vgaD
     vgaD = syncRead vram (toVAddr $ enabledVal vgaPos)
-    -- vgaD = pureS 0x4
 
-boardCircuit :: (ROMAddr -> Byte) -> Signal CLK (VAddr -> VPixel)
-boardCircuit romContents = vram
+boardCircuit :: forall clk. (Clock clk)
+             => (CPUSocketIn clk -> CPUSocketOut clk)
+             -> (ROMAddr -> Byte)
+             -> Signal clk (VAddr -> VPixel)
+boardCircuit cpu romContents = vram
   where
-    (CPUOut{..}, _cpuDebug) = cpu CPUIn{..}
+    CPUSocketOut{..} = cpu CPUSocketIn{..}
 
-    cpuIRQ = high
-    cpuNMI = high
-
-    mpipe :: Signal CLK (Pipe RAMAddr Byte)
-    mpipe = packEnabled (isEnabled cpuMemW .&. isRAM) $
-            pack (unsigned cpuMemA, enabledVal cpuMemW)
+    mpipe :: Signal clk (Pipe RAMAddr Byte)
+    mpipe = packEnabled (isEnabled csMemW .&. isRAM) $
+            pack (unsigned csMemA, enabledVal csMemW)
     ram = writeMemory mpipe
 
-    -- Slow down CPU 1024-fold
-    cpuWait = runRTL $ do
-        counter <- newReg (0 :: U10)
-        counter := reg counter + 1
-        return $ reg counter ./=. 0
+    ramR = syncRead ram (unsigned csMemA)
 
-    ramR = syncRead ram (unsigned cpuMemA)
-
-    vpipe :: Signal CLK (Pipe VAddr U4)
-    vpipe = packEnabled (isEnabled cpuMemW .&&. isVideo) $
-            pack (unsigned (cpuMemA - 0x0200), unsigned $ enabledVal cpuMemW)
+    vpipe :: Signal clk (Pipe VAddr U4)
+    vpipe = packEnabled (isEnabled csMemW .&&. isVideo) $
+            pack (unsigned (csMemA - 0x0200), unsigned $ enabledVal csMemW)
     vram = writeMemory vpipe
 
-    romR = rom (unsigned cpuMemA) (Just . romContents)
+    romR = rom (unsigned csMemA) (Just . romContents)
 
-    isVideo = 0x0200 .<=. cpuMemA .&&. cpuMemA .<. 0x0600
-    isRAM = cpuMemA .<. 0x4000
-    isROM = delay $ 0xF000 .<=. cpuMemA
+    isVideo = 0x0200 .<=. csMemA .&&. csMemA .<. 0x0600
+    isRAM = csMemA .<. 0x4000
+    isROM = delay $ 0xF000 .<=. csMemA
 
-    cpuMemR = mux isROM (ramR, romR)
+    csMemR = mux isROM (ramR, romR)
