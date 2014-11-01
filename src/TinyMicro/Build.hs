@@ -30,15 +30,21 @@ mkXilinxConfig flags = do
             putStrLn "Conflicting flags: --xilinx"
             exitFailure
 
-    (xilinxPlatform, papilioModel) <- case [model | PapilioModel model <- flags] of
+    target <- case [model | PapilioModel model <- flags] of
         [] -> do
-            putStrLn "Defaulting to Papilio One"
-            return ("XC3S500E-VQ100-5", PapilioOne)
-        [model] -> return $ case map toLower model of
-            "one" -> ("XC3S500E-VQ100-5", PapilioOne)
-            "pro" -> ("XC6SLX9-TQG144-2", PapilioPro)
+            putStrLn "Defaulting to Papilio Pro"
+            return "pro"
+        [target] ->
+            return target
         _ -> do
             putStrLn "Conflicting flags: --papilio"
+            exitFailure
+
+    (xilinxPlatform, papilioModel) <- case map toLower target of
+        "one" -> return ("XC3S500E-VQ100-5", PapilioOne)
+        "pro" -> return ("XC6SLX9-TQG144-2", PapilioPro)
+        _ -> do
+            putStrLn $ unwords ["Unknown target platform in --papilio:", show target]
             exitFailure
 
     return (XilinxConfig{..}, papilioModel)
