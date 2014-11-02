@@ -1,7 +1,10 @@
 name:                tinymicro-mos6502-kansas-lava
 version:             0.0.0.0
 synopsis:            TinyMicro implementation in Kansas Lava, built around the MOS 6502
--- description:
+description:         The TinyMicro is a minimal 8-bit microcomputer "architecture" inspired by
+                     the 6502 emulator site http://www.6502asm.com/. It consists of 16K RAM,
+                     up to 8K ROM, a 64-by-64 pixel, 16-color framebuffer memory-mapped from $0200,
+                     and a keyboard readable via $00FF.
 license:             GPL-2
 license-file:        LICENSE
 copyright:           (C) 2014 Gergo Erdi
