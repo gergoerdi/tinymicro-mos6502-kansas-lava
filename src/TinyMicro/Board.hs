@@ -2,17 +2,21 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module TinyMicro.Board where
 
+import MOS6502.Utils
 import TinyMicro.Video
 import Language.KansasLava
 import Data.Sized.Unsigned
 import Data.Bits
 import qualified Data.ByteString as BS
 
+import Language.KansasLava.Signal
+import Control.Applicative
+
 -- Memory layout:
 --
 -- 0x0000 - 0x3FFF: 16K RAM
--- 0x0200 - 0x03FF: 1K VRAM (on top of RAM)
--- 0xE000 - 0xFFFF: 8K ROM
+-- 0x0200 - 0x05FF: 1K VRAM (on top of RAM)
+-- 0xF000 - 0xFFFF: 4K ROM
 
 type Byte = U8
 type Addr = U16
@@ -60,6 +64,12 @@ boardCircuit cpu romContents = vram
 
     isVideo = 0x0200 .<=. csMemA .&&. csMemA .<. 0x0600
     isRAM = csMemA .<. 0x4000
-    isROM = delay $ 0xF000 .<=. csMemA
+    isROM = 0xF000 .<=. csMemA
 
-    csMemR = mux isROM (ramR, romR)
+    csMemR = forceDefined 0 $
+             memoryMapping [ (isRAM, ramR)
+                           , (isROM, romR)
+                           ]
+
+forceDefined :: (Clock clk, Rep a) => a -> Signal clk a -> Signal clk a
+forceDefined def = shallowMapS (fmap (optX . (<|> Just def) . unX))
