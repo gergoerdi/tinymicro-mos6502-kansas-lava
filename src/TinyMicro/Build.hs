@@ -62,7 +62,7 @@ main = do
 
         (xilinxConfig, model) <- mkXilinxConfig flags
 
-        (vhdl, ucf) <- synthesize model modName (Board.board prog)
+        (vhdl, ucf, xaws) <- synthesize model modName (Board.board prog)
         return $ Just $ do
             want $ if null targets then [modName <.> "bit"] else targets
 
@@ -75,4 +75,3 @@ main = do
             ]
 
     modName = "TinyMicro6502"
-    xaws = ["dcm_32_to_80"]

@@ -19,7 +19,6 @@ executable tinymicro-mos6502-kansas-lava
   hs-source-dirs:      src
   main-is:             TinyMicro/Build.hs
   other-modules:
-        TinyMicro.DCM
         TinyMicro.Board
         TinyMicro.Video
         TinyMicro.Board.MOS6502
@@ -27,9 +26,8 @@ executable tinymicro-mos6502-kansas-lava
   build-depends:
         base >=4.7 && < 5,
         kansas-lava >=0.2.4 && < 0.2.5,
-        netlist >=0.3 && <0.4,
         netlist-to-vhdl >=0.3 && <0.4,
-        kansas-lava-papilio >= 0.1.1 && < 0.2,
+        kansas-lava-papilio >= 0.3 && < 0.4,
         kansas-lava-shake >= 0.1.1 && < 0.2,
         shake,
         sized-types >=0.3,

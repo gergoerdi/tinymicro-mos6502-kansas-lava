@@ -3,16 +3,16 @@
 {-# LANGUAGE FlexibleInstances #-}
 module TinyMicro.Video where
 
-import TinyMicro.DCM
-
 import Language.KansasLava
 import Language.KansasLava.VHDL
 import Language.Netlist.GenVHDL
 import Hardware.KansasLava.Boards.Papilio
 import Hardware.KansasLava.Boards.Papilio.Arcade
 import Hardware.KansasLava.VGA.Driver
+import Hardware.KansasLava.Xilinx.DCM
 
-import Data.Sized.Unsigned as Unsigned
+import Data.Sized.Unsigned
+import Data.Sized.Ix
 import Data.Bits
 
 -- import System.FilePath
@@ -39,7 +39,7 @@ drive32x32 palette VGADriverIn{..} =
                  , vgaOutY = y'
                  , ..})
   where
-    VGADriverOut{..} = driveVGA vga800x600at60 (VGADriverIn r g b)
+    VGADriverOut{..} = driveVGA (Witness :: Witness X2) vga800x600at60 (VGADriverIn r g b)
 
     (validX, x) = unpackEnabled vgaOutX
     (validY, y) = unpackEnabled vgaOutY
@@ -128,7 +128,7 @@ palette 0xd = (0xa, 0xf, 0x6) -- Light green
 palette 0xe = (0x0, 0x8, 0xf) -- Light blue
 palette 0xf = (0xb, 0xb, 0xb) -- Light gray
 
-synthesize :: Model -> String -> Fabric () -> IO (String, String)
+synthesize :: Model -> String -> Fabric () -> IO (String, String, [String])
 synthesize model modName bench = do
     kleg <- reifyFabric $ do
         theClk clock
@@ -136,11 +136,13 @@ synthesize model modName bench = do
         bench
 
     mod <- netlistCircuit modName kleg
-    let mod' = dcm80MHz clock mod
+    let mod' = dcm80MHz mod
         vhdl = genVHDL mod' ["work.lava.all", "work.all"]
 
     ucf <- toUCF model kleg
 
-    return (vhdl, ucf)
+    return (vhdl, ucf, [dcmName])
   where
     clock = "CLK_80MHZ"
+    dcmName = "dcm_32_to_80"
+    dcm80MHz = dcm dcmName "CLK_32MHZ" clock
