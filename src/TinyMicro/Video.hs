@@ -39,7 +39,7 @@ drive32x32 palette VGADriverIn{..} =
                  , vgaOutY = y'
                  , ..})
   where
-    VGADriverOut{..} = driveVGA (Witness :: Witness X2) vga800x600at60 (VGADriverIn r g b)
+    VGADriverOut{..} = driveVGA (Witness :: Witness X1) vga800x600at60 (VGADriverIn r g b)
 
     (validX, x) = unpackEnabled vgaOutX
     (validY, y) = unpackEnabled vgaOutY
@@ -67,7 +67,7 @@ drive32x32 palette VGADriverIn{..} =
     x' = mapEnabled (\x -> signed $ (x - pureS xStart) `shiftR` 4) vgaOutX
     y' = mapEnabled (\y -> signed $ (y - pureS yStart) `shiftR` 4) vgaOutY
 
-    newPixel = bitNot vgaOutClkPhase .&&. inField .&&. ((x - pureS xStart) .&. 0xf .==. 0)
+    newPixel = {- bitNot vgaOutClkPhase .&&. -} inField .&&. ((x - pureS xStart) .&. 0xf .==. 0)
 
     rgb = mux inField (pureS (2, 2, 2),
                        funMap (Just . palette) vgaInR)
@@ -136,13 +136,13 @@ synthesize model modName bench = do
         bench
 
     mod <- netlistCircuit modName kleg
-    let mod' = dcm80MHz mod
+    let mod' = dcm40MHz mod
         vhdl = genVHDL mod' ["work.lava.all", "work.all"]
 
     ucf <- toUCF model kleg
 
     return (vhdl, ucf, [dcmName])
   where
-    clock = "CLK_80MHZ"
-    dcmName = "dcm_32_to_80"
-    dcm80MHz = dcm dcmName "CLK_32MHZ" clock
+    clock = "CLK_40MHZ"
+    dcmName = "dcm_32_to_40"
+    dcm40MHz = dcm dcmName "CLK_32MHZ" clock

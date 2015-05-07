@@ -9,8 +9,9 @@ import Language.KansasLava
 import Hardware.KansasLava.Boards.Papilio.Arcade
 import Hardware.KansasLava.VGA.Driver
 import Hardware.KansasLava.VGA
+import Hardware.KansasLava.Rate
 
-import Data.Sized.Unsigned
+import Data.Sized.Ix
 import qualified Data.ByteString as BS
 import Data.Monoid
 
@@ -31,10 +32,7 @@ mos6502 = fromCPU . fst . MOS6502.cpu . toCPU
         cpuIRQ = high
 
         -- Slow down CPU 1024-fold
-        cpuWait = runRTL $ do
-            counter <- newReg (0 :: U10)
-            counter := reg counter + 1
-            return $ reg counter ./=. 0
+        cpuWait = bitNot $ powerOfTwoRate (Witness :: Witness X10)
 
     fromCPU :: (Clock clk) => MOS6502.CPUOut clk -> CPUSocketOut clk
     fromCPU MOS6502.CPUOut{..} = CPUSocketOut{..}
