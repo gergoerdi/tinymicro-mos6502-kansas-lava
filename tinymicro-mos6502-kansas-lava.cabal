@@ -30,7 +30,7 @@ executable tinymicro-mos6502-kansas-lava
         netlist-to-vhdl >=0.3 && <0.4,
         kansas-lava-cores >= 0.1.2 && < 0.2,
         kansas-lava-papilio >= 0.3 && < 0.4,
-        kansas-lava-shake >= 0.2 && < 0.3,
+        kansas-lava-shake >= 0.2.0.1 && < 0.3,
         sized-types >=0.3,
         mos6502-kansas-lava == 0.0.0.0,
         bytestring,
