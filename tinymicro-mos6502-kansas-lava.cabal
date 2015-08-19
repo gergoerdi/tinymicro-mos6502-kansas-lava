@@ -16,9 +16,10 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 executable tinymicro-mos6502-kansas-lava
-  hs-source-dirs:      src
+  hs-source-dirs:      lava
   main-is:             TinyMicro/Build.hs
   other-modules:
+        TinyMicro.Machine
         TinyMicro.Board
         TinyMicro.Video
         TinyMicro.Board.MOS6502
@@ -29,16 +30,14 @@ executable tinymicro-mos6502-kansas-lava
         netlist-to-vhdl >=0.3 && <0.4,
         kansas-lava-cores >= 0.1.2 && < 0.2,
         kansas-lava-papilio >= 0.3 && < 0.4,
-        kansas-lava-shake >= 0.1.1 && < 0.2,
-        shake,
+        kansas-lava-shake >= 0.2 && < 0.3,
         sized-types >=0.3,
         mos6502-kansas-lava == 0.0.0.0,
         bytestring,
-        directory
+        shake
   default-language:    Haskell2010
   other-extensions:    ScopedTypeVariables, RecordWildCards, FlexibleInstances, TypeFamilies, NoMonomorphismRestriction
-  Ghc-Options:         -Werror
-                       -fwarn-unused-imports -fwarn-unused-matches
+  Ghc-Options:         -fwarn-unused-imports -fwarn-unused-matches
                        -fwarn-unused-binds -fwarn-missing-signatures
                        -threaded
 

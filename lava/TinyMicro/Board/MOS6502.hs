@@ -30,9 +30,7 @@ mos6502 = fromCPU . fst . MOS6502.cpu . toCPU
         cpuMemR = csMemR
         cpuNMI = high
         cpuIRQ = high
-
-        -- Slow down CPU 1024-fold
-        cpuWait = bitNot $ powerOfTwoRate (Witness :: Witness X10)
+        cpuWait = low
 
     fromCPU :: (Clock clk) => MOS6502.CPUOut clk -> CPUSocketOut clk
     fromCPU MOS6502.CPUOut{..} = CPUSocketOut{..}
@@ -40,11 +38,5 @@ mos6502 = fromCPU . fst . MOS6502.cpu . toCPU
         csMemA = cpuMemA
         csMemW = cpuMemW
 
-board :: BS.ByteString -> Fabric ()
-board prog = do
-    vga . encodeVGA $ vgaOut
-  where
-    vram = boardCircuit mos6502 (programToROM 0xF000 $ prepareImage prog)
-
-    (vgaPos, VGADriverOut{..}) = vgaFB palette vgaD
-    vgaD = syncRead vram (toVAddr $ enabledVal vgaPos)
+board :: (Clock clk) => BS.ByteString -> Signal clk (Pipe VAddr Nybble)
+board prog = boardCircuit mos6502 (programToROM 0xF000 $ prepareImage prog)

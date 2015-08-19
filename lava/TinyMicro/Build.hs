@@ -6,7 +6,6 @@ import Development.KansasLava.Shake
 import Development.KansasLava.Shake.Xilinx
 import Development.Shake
 import Development.Shake.FilePath
-import System.Directory
 import System.Console.GetOpt
 import System.Exit
 
@@ -14,8 +13,7 @@ import qualified Data.ByteString as BS
 import Data.Char (toLower)
 
 import Hardware.KansasLava.Boards.Papilio.Arcade (Model(..))
-import TinyMicro.Video (synthesize)
-import qualified TinyMicro.Board.MOS6502 as Board
+import qualified TinyMicro.Machine as Machine
 
 data Flag = ImageFile FilePath
           | XilinxRoot FilePath
@@ -40,34 +38,51 @@ mkXilinxConfig flags = do
             putStrLn "Conflicting flags: --papilio"
             exitFailure
 
-    (xilinxPlatform, papilioModel) <- case map toLower target of
-        "one" -> return ("XC3S500E-VQ100-5", PapilioOne)
-        "pro" -> return ("XC6SLX9-TQG144-2", PapilioPro)
+    (xilinxTarget, papilioModel) <- case map toLower target of
+        "one" -> return (papilioOne, PapilioOne)
+        "pro" -> return (papilioPro, PapilioPro)
         _ -> do
             putStrLn $ unwords ["Unknown target platform in --papilio:", show target]
             exitFailure
 
     return (XilinxConfig{..}, papilioModel)
+  where
+    papilioOne = XilinxTarget "Spartan3" "xccs500e" "-5" "vq100"
+    papilioPro = XilinxTarget "Spartan6" "xc6slx9" "-2" "tqg144"
 
 main :: IO ()
 main = do
-    createDirectoryIfMissing True "ise"
-    setCurrentDirectory "ise"
-    shakeArgsWith shakeOptions flags $ \flags targets -> do
+    shakeArgsWith shakeOptions{ shakeFiles = "build/.shake" } flags $ \flags targets -> do
         prog <- case [fileName | ImageFile fileName <- flags] of
             [fileName] -> BS.readFile fileName
             _ -> do
-                putStrLn "Missing flag: --image"
-                exitFailure
+                putStrLn $ unwords ["Missing flag --image, using", defaultImage]
+                BS.readFile defaultImage
+        genVHDLs <- Machine.synthesize prog
 
         (xilinxConfig, model) <- mkXilinxConfig flags
 
-        (vhdl, ucf, xaws) <- synthesize model modName (Board.board prog)
         return $ Just $ do
-            want $ if null targets then [modName <.> "bit"] else targets
+            want $ if null targets then ["build" </> modName <.> "bit"] else targets
 
-            lavaRules modName vhdl ucf
-            xilinxRules xilinxConfig modName xaws
+            lavaRules "build" genVHDLs
+
+            let copyFrom dir out = do
+                    alwaysRerun
+                    copyFileChanged (replaceDirectory out dir) out
+
+            "build" </> "ipcore_dir//*.xco" %> copyFrom "xco"
+            "build" </> "src//*.vhdl" %> copyFrom "vhdl"
+            "build" </> "src//*.ucf" %> copyFrom "ucf"
+
+            let ucf = "TinyMicro6502.ucf" -- TODO: dispatch on model
+            let srcs = ["DualRAM.vhdl", "TinyMicro6502.vhdl", ucf]
+            let allSrcs = concat [ [ "gensrc" </> modName <.> "vhdl" | (modName, _) <- genVHDLs ]
+                                 , [ "gensrc" </> "lava-prelude.vhdl" ]
+                                 , [ "src" </> src | src <- srcs ]
+                                 ]
+                ipcores = ["clockman.xco"]
+            xilinxRules xilinxConfig "build" modName allSrcs ipcores
   where
     flags = [ Option [] ["image"] (ReqArg (Right . ImageFile) "filename") "ROM image file"
             , Option [] ["xilinx"] (ReqArg (Right . XilinxRoot) "path") "Path to Xilinx toolchain"
@@ -75,3 +90,5 @@ main = do
             ]
 
     modName = "TinyMicro6502"
+
+    defaultImage = "example/demoscene.obj"

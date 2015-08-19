@@ -14,9 +14,9 @@ import Control.Applicative
 
 -- Memory layout:
 --
--- 0x0000 - 0x3FFF: 16K RAM
--- 0x0200 - 0x05FF: 1K VRAM (on top of RAM)
--- 0xF000 - 0xFFFF: 4K ROM
+-- 0x0000 - 0x3FFF: 16K x 8 RAM
+-- 0x0200 - 0x05FF:  1K x 4 VRAM (mirrored in RAM)
+-- 0xF000 - 0xFFFF:  4K x 8 ROM
 
 type Byte = U8
 type Addr = U16
@@ -43,8 +43,8 @@ data CPUSocketOut clk = CPUSocketOut
 boardCircuit :: forall clk. (Clock clk)
              => (CPUSocketIn clk -> CPUSocketOut clk)
              -> (ROMAddr -> Byte)
-             -> Signal clk (VAddr -> VPixel)
-boardCircuit cpu romContents = vram
+             -> Signal clk (Pipe VAddr Nybble)
+boardCircuit cpu romContents = vpipe
   where
     CPUSocketOut{..} = cpu CPUSocketIn{..}
 
@@ -58,7 +58,6 @@ boardCircuit cpu romContents = vram
     vpipe :: Signal clk (Pipe VAddr U4)
     vpipe = packEnabled (isEnabled csMemW .&&. isVideo) $
             pack (unsigned (csMemA - 0x0200), unsigned $ enabledVal csMemW)
-    vram = writeMemory vpipe
 
     romR = rom (unsigned csMemA) (Just . romContents)
 

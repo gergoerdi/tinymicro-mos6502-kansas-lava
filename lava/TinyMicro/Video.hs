@@ -22,7 +22,7 @@ type VidX = U5
 type VidY = U5
 
 type VAddr = U10 -- TODO: compute this from VidX + VidY
-type VPixel = U4
+type Nybble = U4
 
 toVAddr :: (Clock clk)
         => Signal clk (VidX, VidY)
@@ -30,8 +30,8 @@ toVAddr :: (Clock clk)
 toVAddr = uncurry appendS . unpack
 
 drive32x32 :: (Clock clk)
-           => (VPixel -> (U4, U4, U4))
-           -> VGADriverIn clk VPixel () ()
+           => (Nybble -> (U4, U4, U4))
+           -> VGADriverIn clk Nybble () ()
            -> (Signal clk Bool, VGADriverOut clk (W VidX) (W VidY) U4 U4 U4)
 drive32x32 palette VGADriverIn{..} =
     (newPixel,
@@ -85,8 +85,8 @@ betweenCO :: (Ord a, Rep a) => Signal clk a -> (a, a) -> Signal clk Bool
 x `betweenCO` (lo, hi) = pureS lo .<=. x .&&. x .<. pureS hi
 
 vgaFB :: forall clk. (Clock clk)
-      => (VPixel -> (U4, U4, U4))
-      -> Signal clk VPixel
+      => (Nybble -> (U4, U4, U4))
+      -> Signal clk Nybble
       -> (Signal clk (Enabled (VidX, VidY)), VGADriverOut clk (W VidX) (W VidY) U4 U4 U4)
 vgaFB palette pixel = (packEnabled newPixel pos, vga)
   where
@@ -110,7 +110,7 @@ vgaFB palette pixel = (packEnabled newPixel pos, vga)
         WHEN (reg prevNewPixel) $ p := pixel
         return (var p)
 
-palette :: VPixel -> (U4, U4, U4)
+palette :: Nybble -> (U4, U4, U4)
 palette 0x0 = (0x0, 0x0, 0x0) -- Black
 palette 0x1 = (0xf, 0xf, 0xf) -- White
 palette 0x2 = (0x8, 0x0, 0x0) -- Red
