@@ -16,7 +16,7 @@ Memory Layout
 Video Output
 ------------
 
-The 1K of video framebuffer is connected to a 640x480 VGA signal generator,
+The 1K of video framebuffer is connected to a 800x600 VGA signal generator,
 at a resolution of 32x32 in row-major order. Only the low 4 bits are used,
 via the 6502asm.com palette.
 
