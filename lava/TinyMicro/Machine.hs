@@ -49,5 +49,5 @@ synthesize prog = do
 
     return [("MainBoard", boardVHDL), ("Video", videoVHDL)]
   where
-    cpuClock = "CLK_1MHZ"
+    cpuClock = "CLK_CPU"
     vidClock = "CLK_40MHZ"

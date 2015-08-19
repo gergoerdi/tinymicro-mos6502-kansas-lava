@@ -48,7 +48,7 @@ begin
  end process proc_CLK_8KHZ;
             
   inst_MainBoard : entity work.MainBoard
-  port map (CLK_1MHZ => CLK_8KHZ,
+  port map (CLK_CPU => CLK_8KHZ,
             RESET => RESET,
             VIDEO_WE => MAIN_VRAM_WE,
             VIDEO_W_ADDR => MAIN_VRAM_W_ADDR,
